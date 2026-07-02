@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Coin outer border (Bronze/Dark Gold shadow) -->
+  <circle cx="256" cy="256" r="240" fill="#b45309" />
+  
+  <!-- Coin body (Bright Gold) -->
+  <circle cx="256" cy="256" r="224" fill="#f59e0b" />
+  
+  <!-- Coin inner gold rim -->
+  <circle cx="256" cy="256" r="184" fill="#fbbf24" stroke="#d97706" stroke-width="16" />
+  
+  <!-- Dollar symbol path (Premium Navy Blue) -->
+  <path d="M256,75 v40 C210,115 180,145 180,185 c0,45 30,70 80,90 s80,35 80,70 c0,35 -30,60 -80,60 c-45,0 -75,-25 -80,-60 h-30 c5,45 40,80 85,90 v45 h30 v-45 c45,0 75,-30 75,-72 c0,-45 -30,-70 -80,-90 s-80,-35 -80,-70 c0,-30 25,-50 75,-50 c45,0 70,25 75,55 h30 c-5,-45 -35,-75 -80,-85 v-40 Z" fill="#1e3a8a" />
+</svg>
