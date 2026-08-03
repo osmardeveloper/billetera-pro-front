@@ -49,32 +49,12 @@ const PAYMENT_METHODS = [
   { id: 'bancolombia', label: 'Bancolombia', color: '#0b0f19', bgColor: '#f1efe9', borderColor: 'rgba(11, 15, 25, 0.15)' }
 ];
 
-const CATEGORIES = [
-  'Transporte',
-  'Gasolina',
-  'Servicios publicos',
-  'Internet y telefonia',
-  'Vehiculo y mantenimiento',
-  'Arriendo',
-  'Mercado y alimentacion',
-  'Meriendas',
-  'Salud y medicamentos',
-  'Ropa y calzado',
-  'Educacion',
-  'Creditos',
-  'Suscripciones IA',
-  'Articulos y artefactos del hogar',
-  'Entretenimiento y salidas',
-  'Restaurantes y comidas fuera',
-  'Otros gastos'
-];
-
-function Expenses() {
+function Incomes() {
   const { user } = useAuth();
   const isAdmin = user.role === 'admin';
 
   // Core Data States
-  const [expenses, setExpenses] = useState([]);
+  const [incomes, setIncomes] = useState([]);
   const [usersList, setUsersList] = useState([]); // Loaded if admin for filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -89,31 +69,28 @@ function Expenses() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // New Expense Modal State
+  // New Income Modal State
   const [openModal, setOpenModal] = useState(false);
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('efectivo');
-  const [categoria, setCategoria] = useState('Otros gastos');
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
 
-  // Bulk Expense Modal State
+  // Bulk Income Modal State
   const [openBulkModal, setOpenBulkModal] = useState(false);
-  const [bulkExpenses, setBulkExpenses] = useState([]);
+  const [bulkIncomes, setBulkIncomes] = useState([]);
 
-  // Edit Expense Modal State
+  // Edit Income Modal State
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
+  const [editingIncome, setEditingIncome] = useState(null);
   const [editAmount, setEditAmount] = useState('');
   const [editMethod, setEditMethod] = useState('efectivo');
-  const [editCategoria, setEditCategoria] = useState('Otros gastos');
   const [editDate, setEditDate] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [filterCategories, setFilterCategories] = useState([]);
 
-  // Delete Expense Modal State
+  // Delete Income Modal State
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [incomeToDelete, setIncomeToDelete] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
   
   const [formError, setFormError] = useState('');
@@ -129,7 +106,7 @@ function Expenses() {
     return `${year}-${month}-${day}`;
   };
 
-  const fetchExpenses = async () => {
+  const fetchIncomes = async () => {
     setLoading(true);
     setError('');
     try {
@@ -137,14 +114,13 @@ function Expenses() {
       if (filterStartDate) params.startDate = filterStartDate;
       if (filterEndDate) params.endDate = filterEndDate;
       if (filterMethods.length > 0) params.methods = filterMethods.join(',');
-      if (filterCategories.length > 0) params.categorias = filterCategories.join(',');
       if (isAdmin && filterOwner) params.ownerCode = filterOwner;
 
-      const response = await api.get('/expenses', { params });
-      setExpenses(response.data);
+      const response = await api.get('/incomes', { params });
+      setIncomes(response.data);
     } catch (err) {
-      console.error('Error fetching expenses:', err);
-      setError(err.response?.data?.error || 'No se pudieron cargar los gastos.');
+      console.error('Error fetching incomes:', err);
+      setError(err.response?.data?.error || 'No se pudieron cargar los ingresos.');
     } finally {
       setLoading(false);
     }
@@ -161,14 +137,13 @@ function Expenses() {
   };
 
   useEffect(() => {
-    fetchExpenses();
+    fetchIncomes();
     fetchUsers();
-  }, [filterStartDate, filterEndDate, filterMethods, filterCategories, filterOwner]);
+  }, [filterStartDate, filterEndDate, filterMethods, filterOwner]);
 
   const handleOpenModal = () => {
     setAmount('');
     setMethod('efectivo');
-    setCategoria('Otros gastos');
     setDate(getLocalDateString());
     setDescription('');
     setFormError('');
@@ -180,12 +155,11 @@ function Expenses() {
   };
 
   const handleOpenBulkModal = () => {
-    setBulkExpenses([
+    setBulkIncomes([
       {
         id: Math.random(),
         amount: '',
         method: 'efectivo',
-        categoria: 'Otros gastos',
         date: getLocalDateString(),
         description: ''
       }
@@ -199,13 +173,12 @@ function Expenses() {
   };
 
   const handleAddBulkRow = () => {
-    setBulkExpenses([
-      ...bulkExpenses,
+    setBulkIncomes([
+      ...bulkIncomes,
       {
         id: Math.random(),
         amount: '',
         method: 'efectivo',
-        categoria: 'Otros gastos',
         date: getLocalDateString(),
         description: ''
       }
@@ -213,93 +186,18 @@ function Expenses() {
   };
 
   const handleRemoveBulkRow = (id) => {
-    if (bulkExpenses.length > 1) {
-      setBulkExpenses(bulkExpenses.filter(exp => exp.id !== id));
+    if (bulkIncomes.length > 1) {
+      setBulkIncomes(bulkIncomes.filter(inc => inc.id !== id));
     }
   };
 
   const handleBulkChange = (id, field, value) => {
-    setBulkExpenses(bulkExpenses.map(exp => {
-      if (exp.id === id) {
-        return { ...exp, [field]: value };
+    setBulkIncomes(bulkIncomes.map(inc => {
+      if (inc.id === id) {
+        return { ...inc, [field]: value };
       }
-      return exp;
+      return inc;
     }));
-  };
-
-  const handleBulkSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Client-side validations
-    for (let i = 0; i < bulkExpenses.length; i++) {
-      const exp = bulkExpenses[i];
-      if (!exp.amount || !exp.method || !exp.date) {
-        setFormError(`Fila ${i + 1}: Los campos monto, método y fecha son obligatorios.`);
-        return;
-      }
-      if (isNaN(exp.amount) || Number(exp.amount) <= 0) {
-        setFormError(`Fila ${i + 1}: El monto debe ser un número positivo.`);
-        return;
-      }
-    }
-
-    setSubmitting(true);
-    setFormError('');
-
-    try {
-      // Map to remove dynamic id and clean numbers
-      const payload = bulkExpenses.map(exp => ({
-        amount: Number(exp.amount),
-        method: exp.method,
-        date: exp.date,
-        description: exp.description,
-        categoria: exp.categoria
-      }));
-
-      await api.post('/expenses/bulk', payload);
-
-      setSnackbar({
-        open: true,
-        message: `${bulkExpenses.length} gastos registrados correctamente.`,
-        severity: 'success'
-      });
-      setOpenBulkModal(false);
-      setPage(0);
-      fetchExpenses(); // Refresh table
-    } catch (err) {
-      console.error('Error creating bulk expenses:', err);
-      setFormError(err.response?.data?.error || 'Error al guardar los gastos.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleOpenEditModal = (expense) => {
-    setEditingExpense(expense);
-    setEditAmount(expense.amount);
-    setEditMethod(expense.method.toLowerCase());
-    setEditDate(expense.date);
-    setEditDescription(expense.description || '');
-    setEditCategoria(expense.categoria || 'Otros gastos');
-    setFormError('');
-    setOpenEditModal(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setOpenEditModal(false);
-    setEditingExpense(null);
-  };
-
-  const handleOpenDeleteModal = (expense) => {
-    setExpenseToDelete(expense);
-    setDeleteReason('');
-    setFormError('');
-    setOpenDeleteModal(true);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setOpenDeleteModal(false);
-    setExpenseToDelete(null);
   };
 
   const handleSubmit = async (e) => {
@@ -318,28 +216,100 @@ function Expenses() {
     setFormError('');
 
     try {
-      await api.post('/expenses', {
+      await api.post('/incomes', {
         amount: Number(amount),
         method,
         date,
-        description,
-        categoria
+        description
       });
 
       setSnackbar({
         open: true,
-        message: 'Gasto registrado correctamente.',
+        message: 'Ingreso registrado correctamente.',
         severity: 'success'
       });
       setOpenModal(false);
       setPage(0);
-      fetchExpenses(); // Refresh table
+      fetchIncomes(); // Refresh table
     } catch (err) {
-      console.error('Error creating expense:', err);
-      setFormError(err.response?.data?.error || 'Error al guardar el gasto.');
+      console.error('Error creating income:', err);
+      setFormError(err.response?.data?.error || 'Error al guardar el ingreso.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Client-side validations
+    for (let i = 0; i < bulkIncomes.length; i++) {
+      const inc = bulkIncomes[i];
+      if (!inc.amount || !inc.method || !inc.date) {
+        setFormError(`Fila ${i + 1}: Los campos monto, método y fecha son obligatorios.`);
+        return;
+      }
+      if (isNaN(inc.amount) || Number(inc.amount) <= 0) {
+        setFormError(`Fila ${i + 1}: El monto debe ser un número positivo.`);
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    setFormError('');
+
+    try {
+      // Map to remove dynamic id and clean numbers
+      const payload = bulkIncomes.map(inc => ({
+        amount: Number(inc.amount),
+        method: inc.method,
+        date: inc.date,
+        description: inc.description
+      }));
+
+      await api.post('/incomes/bulk', payload);
+
+      setSnackbar({
+        open: true,
+        message: `${bulkIncomes.length} ingresos registrados correctamente.`,
+        severity: 'success'
+      });
+      setOpenBulkModal(false);
+      setPage(0);
+      fetchIncomes(); // Refresh table
+    } catch (err) {
+      console.error('Error creating bulk incomes:', err);
+      setFormError(err.response?.data?.error || 'Error al guardar los ingresos.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenEditModal = (income) => {
+    setEditingIncome(income);
+    setEditAmount(income.amount);
+    setEditMethod(income.method.toLowerCase());
+    setEditDate(income.date);
+    setEditDescription(income.description || '');
+    setFormError('');
+    setOpenEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setOpenEditModal(false);
+    setEditingIncome(null);
+  };
+
+  const handleOpenDeleteModal = (income) => {
+    setIncomeToDelete(income);
+    setDeleteReason('');
+    setFormError('');
+    setOpenDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setOpenDeleteModal(false);
+    setIncomeToDelete(null);
   };
 
   const handleEditSubmit = async (e) => {
@@ -367,24 +337,23 @@ function Expenses() {
     setFormError('');
 
     try {
-      await api.put(`/expenses/${editingExpense.id}`, {
+      await api.put(`/incomes/${editingIncome.id}`, {
         amount: Number(editAmount),
         method: editMethod,
         date: editDate,
-        description: editDescription,
-        categoria: editCategoria
+        description: editDescription
       });
 
       setSnackbar({
         open: true,
-        message: 'Gasto actualizado correctamente.',
+        message: 'Ingreso actualizado correctamente.',
         severity: 'success'
       });
       setOpenEditModal(false);
-      fetchExpenses(); // Refresh table
+      fetchIncomes(); // Refresh table
     } catch (err) {
-      console.error('Error updating expense:', err);
-      setFormError(err.response?.data?.error || 'Error al actualizar el gasto.');
+      console.error('Error updating income:', err);
+      setFormError(err.response?.data?.error || 'Error al actualizar el ingreso.');
     } finally {
       setSubmitting(false);
     }
@@ -401,7 +370,7 @@ function Expenses() {
     setFormError('');
 
     try {
-      await api.delete(`/expenses/${expenseToDelete.id}`, {
+      await api.delete(`/incomes/${incomeToDelete.id}`, {
         headers: {
           'x-delete-reason': deleteReason
         }
@@ -409,14 +378,14 @@ function Expenses() {
 
       setSnackbar({
         open: true,
-        message: 'Gasto eliminado correctamente.',
+        message: 'Ingreso eliminado correctamente.',
         severity: 'success'
       });
       setOpenDeleteModal(false);
-      fetchExpenses(); // Refresh table
+      fetchIncomes(); // Refresh table
     } catch (err) {
-      console.error('Error deleting expense:', err);
-      setFormError(err.response?.data?.error || 'Error al eliminar el gasto.');
+      console.error('Error deleting income:', err);
+      setFormError(err.response?.data?.error || 'Error al eliminar el ingreso.');
     } finally {
       setSubmitting(false);
     }
@@ -426,7 +395,6 @@ function Expenses() {
     setFilterStartDate('');
     setFilterEndDate('');
     setFilterMethods([]);
-    setFilterCategories([]);
     setFilterOwner('');
     setPage(0);
   };
@@ -446,11 +414,11 @@ function Expenses() {
   };
 
   // Statistics calculation based on currently filtered list
-  const stats = expenses.reduce((acc, exp) => {
-    acc.total += exp.amount;
-    if (exp.method === 'efectivo') acc.efectivo += exp.amount;
-    if (exp.method === 'nequi') acc.nequi += exp.amount;
-    if (exp.method === 'bancolombia') acc.bancolombia += exp.amount;
+  const stats = incomes.reduce((acc, inc) => {
+    acc.total += inc.amount;
+    if (inc.method === 'efectivo') acc.efectivo += inc.amount;
+    if (inc.method === 'nequi') acc.nequi += inc.amount;
+    if (inc.method === 'bancolombia') acc.bancolombia += inc.amount;
     return acc;
   }, { total: 0, efectivo: 0, nequi: 0, bancolombia: 0 });
 
@@ -461,10 +429,10 @@ function Expenses() {
       <Grid container spacing={3} sx={{ mb: 4 }} alignItems="center" justifyContent="space-between">
         <Grid item xs={12} sm={6}>
           <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            Listado de Gastos Registrados
+            Listado de Ingresos Registrados
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Consulte y filtre los egresos monetarios de los propietarios
+            Consulte y filtre los ingresos monetarios de los propietarios
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
@@ -476,7 +444,7 @@ function Expenses() {
               onClick={handleOpenBulkModal}
               sx={{ fontWeight: 'bold', py: 1.2 }}
             >
-              Registrar Múltiples Gastos
+              Registrar Múltiples Ingresos
             </Button>
             <Button
               variant="contained"
@@ -485,7 +453,7 @@ function Expenses() {
               onClick={handleOpenModal}
               sx={{ fontWeight: 'bold', py: 1.2 }}
             >
-              Registrar Gasto
+              Registrar Ingreso
             </Button>
           </Box>
         </Grid>
@@ -501,7 +469,7 @@ function Expenses() {
           }}>
             <CardContent>
               <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: '0.5px' }}>
-                TOTAL EN GASTOS
+                TOTAL EN INGRESOS
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 800, mt: 1, color: '#1e3a8a' }}>
                 {formatCurrency(stats.total)}
@@ -572,7 +540,7 @@ function Expenses() {
         </Box>
 
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="Fecha Inicio"
               type="date"
@@ -582,7 +550,7 @@ function Expenses() {
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="Fecha Fin"
               type="date"
@@ -592,7 +560,7 @@ function Expenses() {
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={2.5}>
+          <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth>
               <InputLabel id="filter-method-label">Método de Pago</InputLabel>
               <Select
@@ -633,44 +601,6 @@ function Expenses() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2.5}>
-            <FormControl fullWidth>
-              <InputLabel id="filter-category-label">Categorías</InputLabel>
-              <Select
-                labelId="filter-category-label"
-                multiple
-                value={filterCategories}
-                onChange={(e) => setFilterCategories(e.target.value)}
-                input={<OutlinedInput label="Categorías" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip 
-                        key={value} 
-                        label={value} 
-                        size="small"
-                        sx={{ 
-                          height: 20, 
-                          fontSize: '0.75rem', 
-                          color: '#0b0f19',
-                          backgroundColor: '#f1efe9',
-                          border: '1px solid rgba(11, 15, 25, 0.15)'
-                        }} 
-                      />
-                    ))}
-                  </Box>
-                )}
-              >
-                {CATEGORIES.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    <Checkbox checked={filterCategories.indexOf(cat) > -1} size="small" />
-                    <ListItemText primary={cat} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
           {isAdmin && (
             <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth>
@@ -696,7 +626,7 @@ function Expenses() {
             <Tooltip title="Limpiar Filtros">
               <IconButton 
                 onClick={clearFilters}
-                disabled={!filterStartDate && !filterEndDate && filterMethods.length === 0 && filterCategories.length === 0 && !filterOwner}
+                disabled={!filterStartDate && !filterEndDate && filterMethods.length === 0 && !filterOwner}
                 sx={{ 
                   color: '#991b1b',
                   border: '1px solid rgba(153, 27, 27, 0.15)',
@@ -727,27 +657,26 @@ function Expenses() {
         </Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="expenses table">
+          <Table sx={{ minWidth: 650 }} aria-label="incomes table">
             <TableHead>
               <TableRow>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Propietario</TableCell>
                 <TableCell>Descripción</TableCell>
-                <TableCell align="center">Categoría</TableCell>
                 <TableCell align="center">Método de Pago</TableCell>
                 <TableCell align="right">Monto</TableCell>
                 <TableCell align="center">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {expenses.length === 0 ? (
+              {incomes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                    No se encontraron gastos registrados con los filtros aplicados.
+                  <TableCell colSpan={6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No se encontraron ingresos registrados con los filtros aplicados.
                   </TableCell>
                 </TableRow>
               ) : (
-                expenses
+                incomes
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => {
                     const methodObj = PAYMENT_METHODS.find(m => m.id === row.method.toLowerCase());
@@ -769,19 +698,6 @@ function Expenses() {
                         </TableCell>
                         <TableCell sx={{ color: 'text.secondary', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {row.description || 'Sin descripción'}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={row.categoria || 'Otros gastos'}
-                            size="small"
-                            sx={{
-                              fontWeight: '600',
-                              color: '#1e3a8a',
-                              backgroundColor: 'rgba(30, 58, 138, 0.05)',
-                              border: '1px solid rgba(30, 58, 138, 0.15)',
-                              px: 0.5
-                            }}
-                          />
                         </TableCell>
                         <TableCell align="center">
                           <Chip
@@ -848,7 +764,7 @@ function Expenses() {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25, 50]}
         component="div"
-        count={expenses.length}
+        count={incomes.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={(event, newPage) => setPage(newPage)}
@@ -870,7 +786,7 @@ function Expenses() {
         }}
       />
 
-      {/* Register Expense Modal */}
+      {/* Register Income Modal */}
       <Dialog 
         open={openModal} 
         onClose={handleCloseModal}
@@ -885,7 +801,7 @@ function Expenses() {
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>
-          Registrar Gasto
+          Registrar Ingreso
         </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent sx={{ pt: 1 }}>
@@ -909,19 +825,19 @@ function Expenses() {
               }}
             >
               <Typography variant="caption" sx={{ fontWeight: 700, color: '#1e3a8a', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                Propietario del Gasto
+                Propietario del Ingreso
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 800, color: '#0b0f19' }}>
                 {user.name} ({user.code})
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                El gasto se registrará automáticamente a tu nombre.
+                El ingreso se registrará automáticamente a tu nombre.
               </Typography>
             </Box>
 
             <TextField
               margin="normal"
-              label="Monto ($)"
+              label="Monto (COP)"
               type="text"
               inputProps={{ 
                 inputMode: 'numeric', 
@@ -968,36 +884,19 @@ function Expenses() {
               </Grid>
             </Grid>
 
-            <FormControl fullWidth margin="normal" variant="outlined" sx={{ mb: 2 }}>
-              <InputLabel id="category-select-label">Categoría</InputLabel>
-              <Select
-                labelId="category-select-label"
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                label="Categoría"
-              >
-                {CATEGORIES.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
             <TextField
               margin="normal"
               label="Descripción / Concepto"
               fullWidth
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: Pago de internet, Mercado, etc."
+              placeholder="Ej: Salario, Honorarios, Comisión, etc."
               variant="outlined"
               multiline
               rows={2}
-              sx={{ mb: 1 }}
+              sx={{ mb: 2 }}
             />
           </DialogContent>
-          
           <DialogActions sx={{ p: 3, pt: 1 }}>
             <Button onClick={handleCloseModal} variant="outlined" color="inherit">
               Cancelar
@@ -1015,7 +914,7 @@ function Expenses() {
         </form>
       </Dialog>
 
-      {/* Edit Expense Modal */}
+      {/* Edit Income Modal */}
       <Dialog 
         open={openEditModal} 
         onClose={handleCloseEditModal}
@@ -1030,9 +929,9 @@ function Expenses() {
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>
-          Editar Gasto
+          Editar Ingreso
         </DialogTitle>
-        {editingExpense && (
+        {editingIncome && (
           <form onSubmit={handleEditSubmit}>
             <DialogContent sx={{ pt: 1 }}>
               {formError && (
@@ -1047,20 +946,23 @@ function Expenses() {
                   p: 2, 
                   bgcolor: 'rgba(30, 58, 138, 0.04)', 
                   borderRadius: 1, 
-                  border: '1px solid rgba(30, 58, 138, 0.12)'
+                  border: '1px solid rgba(30, 58, 138, 0.12)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5
                 }}
               >
-                <Typography variant="caption" sx={{ fontWeight: 700, color: '#1e3a8a', display: 'block', mb: 0.5 }}>
-                  PROPIETARIO ASOCIADO AL GASTO:
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#1e3a8a', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  Propietario del Ingreso
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 800, color: '#0b0f19' }}>
-                  {editingExpense.ownerName} ({editingExpense.ownerCode})
+                  {editingIncome.ownerName} ({editingIncome.ownerCode})
                 </Typography>
               </Box>
 
               <TextField
                 margin="normal"
-                label="Monto ($)"
+                label="Monto (COP)"
                 type="text"
                 inputProps={{ 
                   inputMode: 'numeric', 
@@ -1107,29 +1009,13 @@ function Expenses() {
                 </Grid>
               </Grid>
 
-              <FormControl fullWidth margin="normal" variant="outlined" sx={{ mb: 2 }}>
-                <InputLabel id="edit-category-select-label">Categoría</InputLabel>
-                <Select
-                  labelId="edit-category-select-label"
-                  value={editCategoria}
-                  onChange={(e) => setEditCategoria(e.target.value)}
-                  label="Categoría"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <MenuItem key={cat} value={cat}>
-                      {cat}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
               <TextField
                 margin="normal"
                 label="Descripción / Concepto"
                 fullWidth
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Ej: Pago de internet, Mercado, etc."
+                placeholder="Ej: Pago de nómina, Honorarios, etc."
                 variant="outlined"
                 multiline
                 rows={2}
@@ -1156,7 +1042,7 @@ function Expenses() {
         )}
       </Dialog>
 
-      {/* Delete Expense Modal */}
+      {/* Delete Income Modal */}
       <Dialog 
         open={openDeleteModal} 
         onClose={handleCloseDeleteModal}
@@ -1171,9 +1057,9 @@ function Expenses() {
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, pb: 1, color: '#991b1b' }}>
-          Confirmar Eliminación de Gasto
+          Confirmar Eliminación de Ingreso
         </DialogTitle>
-        {expenseToDelete && (
+        {incomeToDelete && (
           <form onSubmit={handleDeleteSubmit}>
             <DialogContent sx={{ pt: 1 }}>
               {formError && (
@@ -1182,7 +1068,7 @@ function Expenses() {
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mb: 3, color: '#0b0f19' }}>
-                ¿Está seguro de que desea eliminar el gasto de <strong>{formatCurrency(expenseToDelete.amount)}</strong> registrado a nombre de <strong>{expenseToDelete.ownerName}</strong> el {expenseToDelete.date}?
+                ¿Está seguro de que desea eliminar el ingreso de <strong>{formatCurrency(incomeToDelete.amount)}</strong> registrado a nombre de <strong>{incomeToDelete.ownerName}</strong> el {incomeToDelete.date}?
               </Typography>
               
               <TextField
@@ -1217,7 +1103,7 @@ function Expenses() {
         )}
       </Dialog>
 
-      {/* Register Multiple Expenses (Bulk) Modal */}
+      {/* Register Multiple Incomes (Bulk) Modal */}
       <Dialog 
         open={openBulkModal} 
         onClose={handleCloseBulkModal}
@@ -1232,7 +1118,7 @@ function Expenses() {
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Registrar Múltiples Gastos</span>
+          <span>Registrar Múltiples Ingresos</span>
           <Button 
             variant="outlined" 
             size="small" 
@@ -1250,7 +1136,7 @@ function Expenses() {
               </Alert>
             )}
 
-            {bulkExpenses.map((exp, index) => (
+            {bulkIncomes.map((exp, index) => (
               <Box 
                 key={exp.id} 
                 sx={{ 
@@ -1265,9 +1151,9 @@ function Expenses() {
                 {/* Card Header with numbering and delete button */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.5px' }}>
-                    GASTO #{index + 1}
+                    INGRESO #{index + 1}
                   </Typography>
-                  {bulkExpenses.length > 1 && (
+                  {bulkIncomes.length > 1 && (
                     <IconButton 
                       onClick={() => handleRemoveBulkRow(exp.id)}
                       color="error"
@@ -1287,7 +1173,7 @@ function Expenses() {
                 </Box>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={2}>
+                  <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       label="Monto (COP)"
                       type="text"
@@ -1307,25 +1193,8 @@ function Expenses() {
                       size="small"
                     />
                   </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={2}>
-                    <FormControl fullWidth required size="small">
-                      <InputLabel>Categoría</InputLabel>
-                      <Select
-                        value={exp.categoria}
-                        onChange={(e) => handleBulkChange(exp.id, 'categoria', e.target.value)}
-                        label="Categoría"
-                      >
-                        {CATEGORIES.map((cat) => (
-                          <MenuItem key={cat} value={cat}>
-                            {cat}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
 
-                  <Grid item xs={12} sm={6} md={2}>
+                  <Grid item xs={12} sm={6} md={3}>
                     <FormControl fullWidth required size="small">
                       <InputLabel>Método de Pago</InputLabel>
                       <Select
@@ -1402,4 +1271,4 @@ function Expenses() {
   );
 }
 
-export default Expenses;
+export default Incomes;

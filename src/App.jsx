@@ -25,11 +25,15 @@ import {
   AccountBalanceWallet as WalletIcon,
   AdminPanelSettings as AdminIcon,
   Person as UserIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  TrendingUp as IncomesIcon,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
+import Incomes from './pages/Incomes';
 import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
 import api from './api';
@@ -45,12 +49,12 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState('expenses'); // 'expenses' or 'users'
+  const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'expenses', 'incomes', 'users' or 'logs'
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = sessionStorage.getItem('token');
+    const storedUser = sessionStorage.getItem('user');
 
     if (storedToken && storedUser) {
       setToken(storedToken);
@@ -64,8 +68,8 @@ function App() {
       const response = await api.post('/auth/login', { username, password });
       const { token: jwtToken, user: userData } = response.data;
       
-      localStorage.setItem('token', jwtToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+      sessionStorage.setItem('token', jwtToken);
+      sessionStorage.setItem('user', JSON.stringify(userData));
       
       setToken(jwtToken);
       setUser(userData);
@@ -79,8 +83,8 @@ function App() {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
@@ -196,6 +200,35 @@ function App() {
       <List sx={{ px: 2, flexGrow: 1 }}>
         <ListItem disablePadding sx={{ mb: 1 }}>
           <ListItemButton 
+            onClick={() => { setCurrentTab('dashboard'); setMobileOpen(false); }}
+            selected={currentTab === 'dashboard'}
+            sx={{
+              borderRadius: '6px',
+              backgroundColor: currentTab === 'dashboard' ? 'rgba(30, 58, 138, 0.08)' : 'transparent',
+              borderLeft: currentTab === 'dashboard' ? '4px solid #1e3a8a' : '4px solid transparent',
+              color: currentTab === 'dashboard' ? '#1e3a8a' : '#475569',
+              transition: 'all 0.15s',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.04)',
+                color: '#1e3a8a'
+              },
+              '&.Mui-selected:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.08)'
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Panel General" 
+              primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.5px' }} 
+            />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton 
             onClick={() => { setCurrentTab('expenses'); setMobileOpen(false); }}
             selected={currentTab === 'expenses'}
             sx={{
@@ -218,6 +251,35 @@ function App() {
             </ListItemIcon>
             <ListItemText 
               primary="Gastos" 
+              primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.5px' }} 
+            />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton 
+            onClick={() => { setCurrentTab('incomes'); setMobileOpen(false); }}
+            selected={currentTab === 'incomes'}
+            sx={{
+              borderRadius: '6px',
+              backgroundColor: currentTab === 'incomes' ? 'rgba(30, 58, 138, 0.08)' : 'transparent',
+              borderLeft: currentTab === 'incomes' ? '4px solid #1e3a8a' : '4px solid transparent',
+              color: currentTab === 'incomes' ? '#1e3a8a' : '#475569',
+              transition: 'all 0.15s',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.04)',
+                color: '#1e3a8a'
+              },
+              '&.Mui-selected:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.08)'
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              <IncomesIcon />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Ingresos" 
               primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.5px' }} 
             />
           </ListItemButton>
@@ -394,7 +456,7 @@ function App() {
                   </IconButton>
                   
                   <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 800, letterSpacing: '-0.5px' }}>
-                    {currentTab === 'expenses' ? 'REGISTRO DE GASTOS' : currentTab === 'users' ? 'CONTROL DE USUARIOS' : 'BITÁCORA DE AUDITORÍA'}
+                    {currentTab === 'dashboard' ? 'PANEL GENERAL' : currentTab === 'expenses' ? 'REGISTRO DE GASTOS' : currentTab === 'incomes' ? 'REGISTRO DE INGRESOS' : currentTab === 'users' ? 'CONTROL DE USUARIOS' : 'BITÁCORA DE AUDITORÍA'}
                   </Typography>
                 </Box>
 
@@ -413,7 +475,7 @@ function App() {
           {/* Main workspace view */}
           <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, flexGrow: 1 }}>
             <Container maxWidth="xl" disableGutters sx={{ height: '100%' }}>
-              {currentTab === 'expenses' ? <Expenses /> : currentTab === 'users' ? <Users /> : <AuditLogs />}
+              {currentTab === 'dashboard' ? <Dashboard /> : currentTab === 'expenses' ? <Expenses /> : currentTab === 'incomes' ? <Incomes /> : currentTab === 'users' ? <Users /> : <AuditLogs />}
             </Container>
           </Box>
         </Box>

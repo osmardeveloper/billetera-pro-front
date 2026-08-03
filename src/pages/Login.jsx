@@ -180,12 +180,6 @@ function Login() {
             {loading ? <CircularProgress size={24} sx={{ color: '#ffffff' }} /> : 'Iniciar Sesión'}
           </Button>
         </form>
-
-        <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid rgba(11, 15, 25, 0.08)' }}>
-          <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontWeight: 500 }}>
-            Acceso inicial con cuenta admin y clave 1234.
-          </Typography>
-        </Box>
       </Paper>
     </Box>
   );

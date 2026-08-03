@@ -13,7 +13,7 @@ const api = axios.create({
 // Automatically inject JWT token into requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -32,8 +32,8 @@ api.interceptors.response.use(
       // If unauthorized/forbidden, we could trigger a logout if needed,
       // but we will let the individual pages handle specific warnings.
       if (error.response.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
         // Optional: redirect to login or force page reload to reset state
         window.location.reload();
       }
