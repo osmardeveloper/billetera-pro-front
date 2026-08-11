@@ -727,7 +727,14 @@ function ScheduledDebts() {
                   <Select
                     labelId="time-unit-label"
                     value={tiempoUnidad}
-                    onChange={(e) => setTiempoUnidad(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTiempoUnidad(val);
+                      setPeriodo(
+                        val === 'semanas' ? 'semanal' :
+                        val === 'quincenas' ? 'quincenal' : 'mensual'
+                      );
+                    }}
                     label="Unidad de Tiempo"
                   >
                     <MenuItem value="semanas">Semanas</MenuItem>
@@ -738,20 +745,6 @@ function ScheduledDebts() {
                 </FormControl>
               </Grid>
             </Grid>
-
-            <FormControl fullWidth margin="normal" variant="outlined" sx={{ mb: 2 }}>
-              <InputLabel id="periodo-label">Período de Pago</InputLabel>
-              <Select
-                labelId="periodo-label"
-                value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
-                label="Período de Pago"
-              >
-                <MenuItem value="semanal">Semanal</MenuItem>
-                <MenuItem value="quincenal">Quincenal</MenuItem>
-                <MenuItem value="mensual">Mensual</MenuItem>
-              </Select>
-            </FormControl>
 
             {/* Vista previa matemática */}
             {creationPreview && (
@@ -853,7 +846,14 @@ function ScheduledDebts() {
                   <Select
                     labelId="edit-time-unit-label"
                     value={editTiempoUnidad}
-                    onChange={(e) => setEditTiempoUnidad(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditTiempoUnidad(val);
+                      setEditPeriodo(
+                        val === 'semanas' ? 'semanal' :
+                        val === 'quincenas' ? 'quincenal' : 'mensual'
+                      );
+                    }}
                     label="Unidad de Tiempo"
                   >
                     <MenuItem value="semanas">Semanas</MenuItem>
@@ -864,20 +864,6 @@ function ScheduledDebts() {
                 </FormControl>
               </Grid>
             </Grid>
-
-            <FormControl fullWidth margin="normal" variant="outlined" sx={{ mb: 2 }}>
-              <InputLabel id="edit-periodo-label">Período de Pago</InputLabel>
-              <Select
-                labelId="edit-periodo-label"
-                value={editPeriodo}
-                onChange={(e) => setEditPeriodo(e.target.value)}
-                label="Período de Pago"
-              >
-                <MenuItem value="semanal">Semanal</MenuItem>
-                <MenuItem value="quincenal">Quincenal</MenuItem>
-                <MenuItem value="mensual">Mensual</MenuItem>
-              </Select>
-            </FormControl>
 
             {/* Vista previa matemática en edición */}
             {editPreview && (
