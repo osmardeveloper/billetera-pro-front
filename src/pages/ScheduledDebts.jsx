@@ -133,10 +133,18 @@ function ScheduledDebts() {
       if (periodStr === 'semanal') numCuotas = timeVal * 52;
       else if (periodStr === 'quincenal') numCuotas = timeVal * 24;
       else numCuotas = timeVal * 12;
-    } else { // meses
+    } else if (unitStr === 'meses') {
       if (periodStr === 'semanal') numCuotas = Math.round(timeVal * 4.3333);
       else if (periodStr === 'quincenal') numCuotas = timeVal * 2;
       else numCuotas = timeVal;
+    } else if (unitStr === 'quincenas') {
+      if (periodStr === 'semanal') numCuotas = timeVal * 2;
+      else if (periodStr === 'quincenal') numCuotas = timeVal;
+      else numCuotas = Math.round(timeVal / 2);
+    } else if (unitStr === 'semanas') {
+      if (periodStr === 'semanal') numCuotas = timeVal;
+      else if (periodStr === 'quincenal') numCuotas = Math.round(timeVal / 2);
+      else numCuotas = Math.round(timeVal / 4.3333);
     }
 
     if (numCuotas <= 0) numCuotas = 1;
@@ -722,6 +730,8 @@ function ScheduledDebts() {
                     onChange={(e) => setTiempoUnidad(e.target.value)}
                     label="Unidad de Tiempo"
                   >
+                    <MenuItem value="semanas">Semanas</MenuItem>
+                    <MenuItem value="quincenas">Quincenas</MenuItem>
                     <MenuItem value="meses">Meses</MenuItem>
                     <MenuItem value="años">Años</MenuItem>
                   </Select>
@@ -846,6 +856,8 @@ function ScheduledDebts() {
                     onChange={(e) => setEditTiempoUnidad(e.target.value)}
                     label="Unidad de Tiempo"
                   >
+                    <MenuItem value="semanas">Semanas</MenuItem>
+                    <MenuItem value="quincenas">Quincenas</MenuItem>
                     <MenuItem value="meses">Meses</MenuItem>
                     <MenuItem value="años">Años</MenuItem>
                   </Select>
