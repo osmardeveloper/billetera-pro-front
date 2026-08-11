@@ -31,7 +31,9 @@ import {
   Checkbox,
   ListItemText,
   OutlinedInput,
-  TablePagination
+  TablePagination,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -52,6 +54,8 @@ const PAYMENT_METHODS = [
 function Incomes() {
   const { user } = useAuth();
   const isAdmin = user.role === 'admin';
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Core Data States
   const [incomes, setIncomes] = useState([]);
@@ -654,6 +658,86 @@ function Incomes() {
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
           <CircularProgress color="primary" />
+        </Box>
+      ) : isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {incomes.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+              No se encontraron ingresos registrados con los filtros aplicados.
+            </Paper>
+          ) : (
+            incomes
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => {
+                const methodObj = PAYMENT_METHODS.find(m => m.id === row.method.toLowerCase());
+                return (
+                  <Paper 
+                    key={row.id} 
+                    sx={{ 
+                      p: 2, 
+                      border: '1px solid rgba(11, 15, 25, 0.08)',
+                      borderRadius: 2,
+                      boxShadow: '0 4px 12px rgba(11, 15, 25, 0.01)'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Chip
+                        label={methodObj?.label || row.method}
+                        size="small"
+                        sx={{
+                          fontWeight: 'bold',
+                          color: '#0b0f19',
+                          backgroundColor: '#f1efe9',
+                          border: '1px solid rgba(11, 15, 25, 0.15)',
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        {row.date} {row.createdAt ? new Date(row.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0b0f19', mb: 0.5 }}>
+                      {row.description || 'Sin descripción'}
+                    </Typography>
+
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
+                      Propietario: <strong>{row.ownerName}</strong> ({row.ownerCode})
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.04)', pt: 1.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        Monto Ingreso:
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#16a34a' }}>
+                        {formatCurrency(row.amount)}
+                      </Typography>
+                    </Box>
+
+                    {(isAdmin || row.ownerCode === user.code) && (
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2, pt: 1, borderTop: '1px dashed rgba(0,0,0,0.04)' }}>
+                        <Button
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => handleOpenEditModal(row)}
+                          sx={{ fontWeight: 'bold' }}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleOpenDeleteModal(row)}
+                          sx={{ fontWeight: 'bold' }}
+                        >
+                          Eliminar
+                        </Button>
+                      </Box>
+                    )}
+                  </Paper>
+                );
+              })
+          )}
         </Box>
       ) : (
         <TableContainer component={Paper}>

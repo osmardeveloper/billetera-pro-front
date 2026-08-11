@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Paper, 
@@ -26,7 +26,35 @@ function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingMessage('');
+      return;
+    }
+
+    setLoadingMessage('Iniciando sesión...');
+
+    const timer1 = setTimeout(() => {
+      setLoadingMessage('... esperando respuesta del servidor...');
+    }, 2500);
+
+    const timer2 = setTimeout(() => {
+      setLoadingMessage('... estableciendo conexión con el servidor...');
+    }, 7000);
+
+    const timer3 = setTimeout(() => {
+      setLoadingMessage('... ya casi, por favor ten paciencia...');
+    }, 15000);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [loading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +66,7 @@ function Login() {
     setLoading(true);
     setError('');
 
-    const result = await login(username, password);
+    const result = await login(username.toLowerCase().trim(), password);
     setLoading(false);
     
     if (!result.success) {
@@ -114,7 +142,7 @@ function Login() {
             fullWidth
             label="Usuario"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
             margin="normal"
             variant="outlined"
             placeholder="Ingrese usuario"
@@ -179,6 +207,40 @@ function Login() {
           >
             {loading ? <CircularProgress size={24} sx={{ color: '#ffffff' }} /> : 'Iniciar Sesión'}
           </Button>
+
+          {loading && (
+            <Box 
+              sx={{ 
+                mt: 3, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: 1.5,
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: 'rgba(30, 58, 138, 0.03)',
+                border: '1px dashed rgba(30, 58, 138, 0.2)'
+              }}
+            >
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#1e3a8a', 
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.2px',
+                  animation: 'pulse 2s infinite ease-in-out',
+                  '@keyframes pulse': {
+                    '0%': { opacity: 0.6 },
+                    '50%': { opacity: 1 },
+                    '100%': { opacity: 0.6 }
+                  }
+                }}
+              >
+                {loadingMessage}
+              </Typography>
+            </Box>
+          )}
         </form>
       </Paper>
     </Box>

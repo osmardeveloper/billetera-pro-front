@@ -25,7 +25,9 @@ import {
   Snackbar,
   Grid,
   Avatar,
-  IconButton
+  IconButton,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   PersonAdd as PersonAddIcon,
@@ -38,6 +40,8 @@ import {
 import api from '../api';
 
 function Users() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -142,7 +146,7 @@ function Users() {
 
     try {
       await api.post('/users', {
-        username,
+        username: username.toLowerCase().trim(),
         password,
         name,
         role,
@@ -183,7 +187,7 @@ function Users() {
       await api.put(`/users/${editingUser.id}`, {
         name: editName,
         role: editRole,
-        username: editUsername,
+        username: editUsername.toLowerCase().trim(),
         password: editPassword || undefined
       }, {
         headers: {
@@ -283,6 +287,81 @@ function Users() {
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
           <CircularProgress color="primary" />
+        </Box>
+      ) : isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {users.map((row) => (
+            <Paper 
+              key={row.id} 
+              sx={{ 
+                p: 2, 
+                border: '1px solid rgba(11, 15, 25, 0.08)',
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(11, 15, 25, 0.01)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                <Avatar sx={{ width: 40, height: 40, bgcolor: 'rgba(30, 58, 138, 0.05)', color: '#1e3a8a', fontSize: '1rem', fontWeight: 'bold', border: '1px solid rgba(30, 58, 138, 0.15)' }}>
+                  {row.name.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0b0f19' }}>
+                    {row.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Usuario: {row.username}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, borderTop: '1px solid rgba(0,0,0,0.04)', pt: 1.5 }}>
+                <Chip
+                  icon={row.role === 'admin' ? <AdminIcon sx={{ fontSize: 14, color: '#ffffff !important' }} /> : <UserIcon sx={{ fontSize: 14, color: '#0b0f19 !important' }} />}
+                  label={row.role === 'admin' ? 'ADMIN' : 'USER'}
+                  size="small"
+                  sx={{ 
+                    fontWeight: 'bold',
+                    backgroundColor: row.role === 'admin' ? '#1e3a8a' : '#f1efe9',
+                    color: row.role === 'admin' ? '#ffffff' : '#0b0f19',
+                    border: row.role === 'admin' ? '1px solid #172554' : '1px solid rgba(11, 15, 25, 0.15)',
+                    borderRadius: 1
+                  }}
+                />
+                <Chip
+                  label={`Propietario: ${row.code}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    color: '#1e3a8a',
+                    borderColor: 'rgba(30, 58, 138, 0.3)',
+                    borderRadius: 1
+                  }}
+                />
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, borderTop: '1px dashed rgba(0,0,0,0.04)', pt: 1.5 }}>
+                <Button
+                  size="small"
+                  startIcon={<EditIcon />}
+                  onClick={() => handleOpenEditModal(row)}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  disabled={row.username === 'admin'}
+                  startIcon={<DeleteIcon />}
+                  onClick={() => handleOpenDeleteModal(row)}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  Eliminar
+                </Button>
+              </Box>
+            </Paper>
+          ))}
         </Box>
       ) : (
         <TableContainer component={Paper}>
@@ -425,7 +504,7 @@ function Users() {
                   label="Nombre de Usuario"
                   fullWidth
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="Ej: jperez"
                   variant="outlined"
                   sx={{ mb: 2 }}
@@ -531,7 +610,7 @@ function Users() {
                     label="Nombre de Usuario"
                     fullWidth
                     value={editUsername}
-                    onChange={(e) => setEditUsername(e.target.value)}
+                    onChange={(e) => setEditUsername(e.target.value.toLowerCase())}
                     variant="outlined"
                     placeholder="Ej: jperez"
                     sx={{ mb: 2 }}

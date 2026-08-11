@@ -14,7 +14,9 @@ import {
   CircularProgress,
   Grid,
   Avatar,
-  TablePagination
+  TablePagination,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -23,6 +25,8 @@ import {
 import api from '../api';
 
 function AuditLogs() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -85,6 +89,70 @@ function AuditLogs() {
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
           <CircularProgress color="primary" />
+        </Box>
+      ) : isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {logs.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+              No se han registrado eliminaciones en el sistema.
+            </Paper>
+          ) : (
+            logs
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => (
+                <Paper 
+                  key={row.id} 
+                  sx={{ 
+                    p: 2, 
+                    border: '1px solid rgba(11, 15, 25, 0.08)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(11, 15, 25, 0.01)'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                    <Chip
+                      label={row.type.toUpperCase()}
+                      size="small"
+                      sx={{ 
+                        fontWeight: 'bold',
+                        backgroundColor: row.type === 'Usuario' ? 'rgba(79, 70, 229, 0.08)' : 'rgba(13, 148, 136, 0.08)',
+                        color: row.type === 'Usuario' ? '#4f46e5' : '#0d9488',
+                        border: row.type === 'Usuario' ? '1px solid rgba(79, 70, 229, 0.15)' : '1px solid rgba(13, 148, 136, 0.15)',
+                        borderRadius: 1
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      {formatDateTime(row.timestamp)}
+                    </Typography>
+                  </Box>
+
+                  <Typography variant="subtitle2" sx={{ color: 'text.secondary', display: 'block', mb: 0.5, fontWeight: 700 }}>
+                    Registro Eliminado:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#0b0f19', mb: 1.5, pl: 1, borderLeft: '3px solid #1e3a8a' }}>
+                    {row.targetDetails}
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, borderTop: '1px solid rgba(0,0,0,0.04)', pt: 1.5 }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      Autorizado Por:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>
+                      {row.deletedBy}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ p: 1.5, borderRadius: 1, backgroundColor: '#faf9f5', border: '1px solid rgba(11, 15, 25, 0.05)' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontWeight: 700, mb: 0.5 }}>
+                      Motivo:
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                      "{row.reason}"
+                    </Typography>
+                  </Box>
+                </Paper>
+              ))
+          )}
         </Box>
       ) : (
         <TableContainer component={Paper}>

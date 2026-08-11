@@ -67,9 +67,6 @@ function Dashboard() {
   const [filterEndDate, setFilterEndDate] = useState('');
   const [filterOwner, setFilterOwner] = useState('');
 
-  // Chart Type: 'bar' or 'donut'
-  const [chartType, setChartType] = useState('bar');
-
   // SVG Tooltip State
   const [tooltip, setTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
 
@@ -421,28 +418,10 @@ function Dashboard() {
             {/* Chart Card */}
             <Grid item xs={12} md={7}>
               <Paper sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 1.5 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0b0f19', letterSpacing: '0.5px' }}>
                     COMPARATIVA DE FLUJO
                   </Typography>
-                  <ButtonGroup size="small" color="primary">
-                    <Button 
-                      variant={chartType === 'bar' ? 'contained' : 'outlined'} 
-                      onClick={() => setChartType('bar')}
-                      startIcon={<BarChartIcon />}
-                      sx={{ fontWeight: 'bold' }}
-                    >
-                      Barras
-                    </Button>
-                    <Button 
-                      variant={chartType === 'donut' ? 'contained' : 'outlined'} 
-                      onClick={() => setChartType('donut')}
-                      startIcon={<PieChartIcon />}
-                      sx={{ fontWeight: 'bold' }}
-                    >
-                      Anillo
-                    </Button>
-                  </ButtonGroup>
                 </Box>
 
                 {/* Render SVG Chart */}
@@ -451,7 +430,7 @@ function Dashboard() {
                     <Typography variant="body2" color="text.secondary">
                       No hay transacciones registradas para este periodo para generar el gráfico.
                     </Typography>
-                  ) : chartType === 'bar' ? (
+                  ) : (
                     /* Custom Interactive SVG Bar Chart */
                     <svg width="100%" height="220" viewBox="0 0 300 200" style={{ overflow: 'visible' }}>
                       {/* Grid Lines */}
@@ -470,7 +449,6 @@ function Dashboard() {
                         rx="4"
                         style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
                         onMouseEnter={(e) => {
-                          const rect = e.target.getBoundingClientRect();
                           setTooltip({
                             show: true,
                             text: `Ingresos: ${formatCurrency(totalIncome)}`,
@@ -484,7 +462,7 @@ function Dashboard() {
                         Ingresos
                       </text>
                       <text x="97" y={170 - getBarHeight(totalIncome) - 10} textAnchor="middle" fill="#16a34a" fontSize="10" fontWeight="bold">
-                        {totalIncome > 0 && Math.round((totalIncome / totalFlow) * 100) + '%'}
+                        {formatCurrency(totalIncome)}
                       </text>
 
                       {/* Bar 2: Expenses */}
@@ -510,7 +488,7 @@ function Dashboard() {
                         Egresos
                       </text>
                       <text x="202" y={170 - getBarHeight(totalExpense) - 10} textAnchor="middle" fill="#dc2626" fontSize="10" fontWeight="bold">
-                        {totalExpense > 0 && Math.round((totalExpense / totalFlow) * 100) + '%'}
+                        {formatCurrency(totalExpense)}
                       </text>
 
                       {/* SVG Tooltip */}
@@ -538,78 +516,6 @@ function Dashboard() {
                         </g>
                       )}
                     </svg>
-                  ) : (
-                    /* Custom Interactive SVG Donut Chart */
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <svg width="160" height="160" viewBox="0 0 120 120">
-                        {/* Empty track if no flow */}
-                        {totalFlow === 0 ? (
-                          <circle cx="60" cy="60" r={radius} fill="transparent" stroke="#f1efe9" strokeWidth="12" />
-                        ) : (
-                          <>
-                            {/* Segment 1: Incomes (Green) */}
-                            <circle
-                              cx="60"
-                              cy="60"
-                              r={radius}
-                              fill="transparent"
-                              stroke="#16a34a"
-                              strokeWidth="14"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={incomeStrokeDashoffset}
-                              transform="rotate(-90 60 60)"
-                              style={{ transition: 'all 0.5s ease', cursor: 'pointer' }}
-                              onMouseEnter={() => setTooltip({
-                                show: true,
-                                text: `Ingresos: ${Math.round((totalIncome / totalFlow) * 100)}%`,
-                                x: 0, y: 0
-                              })}
-                              onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
-                            />
-                            {/* Segment 2: Expenses (Red) */}
-                            <circle
-                              cx="60"
-                              cy="60"
-                              r={radius}
-                              fill="transparent"
-                              stroke="#dc2626"
-                              strokeWidth="14"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={expenseStrokeDashoffset}
-                              transform={`rotate(${((totalIncome / totalFlow) * 360) - 90} 60 60)`}
-                              style={{ transition: 'all 0.5s ease', cursor: 'pointer' }}
-                              onMouseEnter={() => setTooltip({
-                                show: true,
-                                text: `Egresos: ${Math.round((totalExpense / totalFlow) * 100)}%`,
-                                x: 0, y: 0
-                              })}
-                              onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
-                            />
-                          </>
-                        )}
-                        {/* Center hole for donut effect */}
-                        <circle cx="60" cy="60" r="38" fill="#ffffff" />
-                        <text x="60" y="65" textAnchor="middle" fontSize="9" fontWeight="900" fill="#0b0f19">
-                          BALANCE
-                        </text>
-                      </svg>
-
-                      {/* Donut Legend */}
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ width: 14, height: 14, bgcolor: '#16a34a', borderRadius: '4px' }} />
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#0b0f19' }}>
-                            Ingresos ({Math.round((totalIncome / totalFlow) * 100)}%)
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ width: 14, height: 14, bgcolor: '#dc2626', borderRadius: '4px' }} />
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#0b0f19' }}>
-                            Egresos ({Math.round((totalExpense / totalFlow) * 100)}%)
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
                   )}
                 </Box>
               </Paper>

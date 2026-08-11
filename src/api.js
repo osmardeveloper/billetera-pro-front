@@ -7,7 +7,7 @@ if (rawBaseURL && !rawBaseURL.endsWith('/api') && !rawBaseURL.endsWith('/api/'))
 
 const api = axios.create({
   baseURL: rawBaseURL,
-  timeout: 10000,
+  timeout: 60000,
 });
 
 // Automatically inject JWT token into requests

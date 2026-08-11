@@ -27,7 +27,9 @@ import {
   Person as UserIcon,
   History as HistoryIcon,
   TrendingUp as IncomesIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  Flag as GoalsIcon,
+  Receipt as DebtsIcon
 } from '@mui/icons-material';
 
 import Login from './pages/Login';
@@ -36,6 +38,8 @@ import Expenses from './pages/Expenses';
 import Incomes from './pages/Incomes';
 import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
+import SavingsGoals from './pages/SavingsGoals';
+import ScheduledDebts from './pages/ScheduledDebts';
 import api from './api';
 
 // Create Auth Context
@@ -49,6 +53,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEntering, setIsEntering] = useState(false);
   const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'expenses', 'incomes', 'users' or 'logs'
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -65,8 +70,11 @@ function App() {
 
   const login = async (username, password) => {
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const sanitizedUsername = username.toLowerCase().trim();
+      const response = await api.post('/auth/login', { username: sanitizedUsername, password });
       const { token: jwtToken, user: userData } = response.data;
+      
+      setIsEntering(true);
       
       sessionStorage.setItem('token', jwtToken);
       sessionStorage.setItem('user', JSON.stringify(userData));
@@ -74,6 +82,11 @@ function App() {
       setToken(jwtToken);
       setUser(userData);
       setCurrentTab('expenses'); // Default view
+      
+      setTimeout(() => {
+        setIsEntering(false);
+      }, 2500);
+
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
@@ -108,6 +121,41 @@ function App() {
         <CircularProgress size={50} thickness={4} sx={{ color: '#1e3a8a' }} />
         <Typography sx={{ mt: 3, color: '#1e3a8a', letterSpacing: '1px', fontWeight: 'bold' }}>
           CARGANDO SISTEMA...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (isEntering) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          minHeight: '100vh',
+          width: '100vw',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 9999,
+          background: 'radial-gradient(circle at 50% 50%, #faf9f5 0%, #f3efe6 100%)'
+        }}
+      >
+        <CircularProgress size={60} thickness={4} sx={{ color: '#1e3a8a' }} />
+        <Typography 
+          variant="h6"
+          sx={{ 
+            mt: 4, 
+            color: '#1e3a8a', 
+            letterSpacing: '0.5px', 
+            fontWeight: 700,
+            textAlign: 'center',
+            px: 2
+          }}
+        >
+          ... estamos cargando los datos, por favor espera...
         </Typography>
       </Box>
     );
@@ -285,6 +333,64 @@ function App() {
           </ListItemButton>
         </ListItem>
 
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton 
+            onClick={() => { setCurrentTab('goals'); setMobileOpen(false); }}
+            selected={currentTab === 'goals'}
+            sx={{
+              borderRadius: '6px',
+              backgroundColor: currentTab === 'goals' ? 'rgba(30, 58, 138, 0.08)' : 'transparent',
+              borderLeft: currentTab === 'goals' ? '4px solid #1e3a8a' : '4px solid transparent',
+              color: currentTab === 'goals' ? '#1e3a8a' : '#475569',
+              transition: 'all 0.15s',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.04)',
+                color: '#1e3a8a'
+              },
+              '&.Mui-selected:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.08)'
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              <GoalsIcon />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Metas de Ahorro" 
+              primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.5px' }} 
+            />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItemButton 
+            onClick={() => { setCurrentTab('debts'); setMobileOpen(false); }}
+            selected={currentTab === 'debts'}
+            sx={{
+              borderRadius: '6px',
+              backgroundColor: currentTab === 'debts' ? 'rgba(30, 58, 138, 0.08)' : 'transparent',
+              borderLeft: currentTab === 'debts' ? '4px solid #1e3a8a' : '4px solid transparent',
+              color: currentTab === 'debts' ? '#1e3a8a' : '#475569',
+              transition: 'all 0.15s',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.04)',
+                color: '#1e3a8a'
+              },
+              '&.Mui-selected:hover': {
+                backgroundColor: 'rgba(30, 58, 138, 0.08)'
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              <DebtsIcon />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Deudas programadas" 
+              primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.5px' }} 
+            />
+          </ListItemButton>
+        </ListItem>
+
         {user.role === 'admin' && (
           <ListItem disablePadding sx={{ mb: 1 }}>
             <ListItemButton 
@@ -456,7 +562,7 @@ function App() {
                   </IconButton>
                   
                   <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 800, letterSpacing: '-0.5px' }}>
-                    {currentTab === 'dashboard' ? 'PANEL GENERAL' : currentTab === 'expenses' ? 'REGISTRO DE GASTOS' : currentTab === 'incomes' ? 'REGISTRO DE INGRESOS' : currentTab === 'users' ? 'CONTROL DE USUARIOS' : 'BITÁCORA DE AUDITORÍA'}
+                    {currentTab === 'dashboard' ? 'PANEL GENERAL' : currentTab === 'expenses' ? 'REGISTRO DE GASTOS' : currentTab === 'incomes' ? 'REGISTRO DE INGRESOS' : currentTab === 'goals' ? 'METAS DE AHORRO' : currentTab === 'debts' ? 'DEUDAS PROGRAMADAS' : currentTab === 'users' ? 'CONTROL DE USUARIOS' : 'BITÁCORA DE AUDITORÍA'}
                   </Typography>
                 </Box>
 
@@ -475,7 +581,7 @@ function App() {
           {/* Main workspace view */}
           <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, flexGrow: 1 }}>
             <Container maxWidth="xl" disableGutters sx={{ height: '100%' }}>
-              {currentTab === 'dashboard' ? <Dashboard /> : currentTab === 'expenses' ? <Expenses /> : currentTab === 'incomes' ? <Incomes /> : currentTab === 'users' ? <Users /> : <AuditLogs />}
+              {currentTab === 'dashboard' ? <Dashboard /> : currentTab === 'expenses' ? <Expenses /> : currentTab === 'incomes' ? <Incomes /> : currentTab === 'goals' ? <SavingsGoals /> : currentTab === 'debts' ? <ScheduledDebts /> : currentTab === 'users' ? <Users /> : <AuditLogs />}
             </Container>
           </Box>
         </Box>
