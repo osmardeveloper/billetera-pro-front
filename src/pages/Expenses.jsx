@@ -730,92 +730,107 @@ function Expenses() {
           <CircularProgress color="primary" />
         </Box>
       ) : isMobile ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Paper 
+          sx={{ 
+            border: '1px solid rgba(11, 15, 25, 0.08)',
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(11, 15, 25, 0.01)',
+            overflow: 'hidden'
+          }}
+        >
           {expenses.length === 0 ? (
-            <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+            <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
               No se encontraron gastos registrados con los filtros aplicados.
-            </Paper>
+            </Box>
           ) : (
             expenses
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
+              .map((row, index, arr) => {
                 const methodObj = PAYMENT_METHODS.find(m => m.id === row.method.toLowerCase());
                 return (
-                  <Paper 
+                  <Box 
                     key={row.id} 
                     sx={{ 
                       p: 2, 
-                      border: '1px solid rgba(11, 15, 25, 0.08)',
-                      borderRadius: 2,
-                      boxShadow: '0 4px 12px rgba(11, 15, 25, 0.01)'
+                      display: 'flex',
+                      alignItems: 'stretch',
+                      justifyContent: 'space-between',
+                      borderBottom: index < arr.length - 1 ? '1px solid rgba(11, 15, 25, 0.08)' : 'none',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.01)'
+                      }
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Chip
-                        label={row.categoria || 'Otros gastos'}
-                        size="small"
-                        sx={{
-                          fontWeight: '600',
-                          color: '#1e3a8a',
-                          backgroundColor: 'rgba(30, 58, 138, 0.05)',
-                          border: '1px solid rgba(30, 58, 138, 0.15)',
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, mr: 2 }}>
+                      <Typography variant="body1" sx={{ fontWeight: 700, color: '#0b0f19' }}>
+                        {row.description || 'Sin descripción'}{' '}
+                        <Box component="span" sx={{ color: '#1e3a8a', fontWeight: 600, fontSize: '0.8rem' }}>
+                          ({methodObj?.label || row.method})
+                        </Box>
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={row.categoria || 'Otros gastos'}
+                          size="small"
+                          sx={{
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            color: '#1e3a8a',
+                            backgroundColor: 'rgba(30, 58, 138, 0.05)',
+                            border: '1px solid rgba(30, 58, 138, 0.12)',
+                            height: 20
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', minHeight: 65 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#b91c1c', lineHeight: 1.2 }}>
+                        -{formatCurrency(row.amount)}
+                      </Typography>
+                      
+                      {(isAdmin || row.ownerCode === user.code) && (
+                        <Box sx={{ display: 'flex', gap: 0.5, my: 0.5 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenEditModal(row)}
+                            sx={{ 
+                              color: '#1e3a8a',
+                              p: 0.5,
+                              border: '1px solid rgba(30, 58, 138, 0.15)',
+                              borderRadius: 1,
+                              '&:hover': { backgroundColor: 'rgba(30, 58, 138, 0.05)' }
+                            }}
+                          >
+                            <EditIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleOpenDeleteModal(row)}
+                            sx={{ 
+                              color: '#991b1b',
+                              p: 0.5,
+                              border: '1px solid rgba(153, 27, 27, 0.15)',
+                              borderRadius: 1,
+                              '&:hover': { backgroundColor: 'rgba(153, 27, 27, 0.05)' }
+                            }}
+                          >
+                            <DeleteIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Box>
+                      )}
+
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.7rem', textAlign: 'right', mt: 0.5 }}>
                         {row.date} {row.createdAt ? new Date(row.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
                       </Typography>
                     </Box>
-
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0b0f19', mb: 0.5 }}>
-                      {row.description || 'Sin descripción'}
-                    </Typography>
-
-                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
-                      Propietario: <strong>{row.ownerName}</strong> ({row.ownerCode})
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.04)', pt: 1.5 }}>
-                      <Chip
-                        label={methodObj?.label || row.method}
-                        size="small"
-                        sx={{
-                          fontWeight: 'bold',
-                          color: '#0b0f19',
-                          backgroundColor: '#f1efe9',
-                          border: '1px solid rgba(11, 15, 25, 0.15)',
-                        }}
-                      />
-                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#0b0f19' }}>
-                        {formatCurrency(row.amount)}
-                      </Typography>
-                    </Box>
-
-                    {(isAdmin || row.ownerCode === user.code) && (
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2, pt: 1, borderTop: '1px dashed rgba(0,0,0,0.04)' }}>
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleOpenEditModal(row)}
-                          sx={{ fontWeight: 'bold' }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          startIcon={<DeleteIcon />}
-                          onClick={() => handleOpenDeleteModal(row)}
-                          sx={{ fontWeight: 'bold' }}
-                        >
-                          Eliminar
-                        </Button>
-                      </Box>
-                    )}
-                  </Paper>
+                  </Box>
                 );
               })
           )}
-        </Box>
+        </Paper>
       ) : (
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} aria-label="expenses table">
