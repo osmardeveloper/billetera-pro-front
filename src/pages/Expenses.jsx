@@ -40,7 +40,8 @@ import {
   FilterList as FilterIcon,
   Refresh as RefreshIcon,
   Edit as EditIcon,
-  DeleteOutline as DeleteIcon
+  DeleteOutline as DeleteIcon,
+  BarChart as BarChartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../App';
 import api from '../api';
@@ -119,6 +120,7 @@ function Expenses() {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
+  const [openChartsModal, setOpenChartsModal] = useState(false);
   
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -464,10 +466,29 @@ function Expenses() {
       {/* 1. Header Grid */}
       <Grid container spacing={3} sx={{ mb: 4 }} alignItems="center" justifyContent="space-between">
         <Grid item xs={12} sm={6}>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            Listado de Gastos Registrados
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              Listado de Gastos Registrados
+            </Typography>
+            <Tooltip title="Ver Distribución por Categorías">
+              <IconButton 
+                color="primary"
+                onClick={() => setOpenChartsModal(true)}
+                sx={{ 
+                  border: '1px solid rgba(30, 58, 138, 0.15)',
+                  borderRadius: 1,
+                  p: 0.8,
+                  backgroundColor: 'rgba(30, 58, 138, 0.02)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(30, 58, 138, 0.08)'
+                  }
+                }}
+              >
+                <BarChartIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
             Consulte y filtre los egresos monetarios de los propietarios
           </Typography>
         </Grid>
@@ -1491,6 +1512,97 @@ function Expenses() {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      {/* Charts Dialog */}
+      <Dialog 
+        open={openChartsModal} 
+        onClose={() => setOpenChartsModal(false)}
+        PaperProps={{
+          sx: {
+            width: '100%',
+            maxWidth: 500,
+            background: '#ffffff',
+            border: '1px solid rgba(11, 15, 25, 0.12)',
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Distribución por Categoría</span>
+          <IconButton onClick={() => setOpenChartsModal(false)} size="small">
+            <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 'normal', lineHeight: 1 }}>×</Typography>
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+            Visualice el monto total y la proporción correspondiente a cada categoría de gasto en el período actualmente seleccionado.
+          </Typography>
+
+          {expenses.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary', bgcolor: '#f9f9fb', borderRadius: 2 }}>
+              No hay gastos registrados con los filtros aplicados para generar gráficos.
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {(() => {
+                // Calculate category stats
+                const categoryStats = expenses.reduce((acc, exp) => {
+                  const cat = exp.categoria || 'Otros gastos';
+                  acc[cat] = (acc[cat] || 0) + exp.amount;
+                  return acc;
+                }, {});
+
+                const totalAmount = Object.values(categoryStats).reduce((sum, val) => sum + val, 0);
+
+                return Object.entries(categoryStats)
+                  .map(([category, amount]) => ({
+                    category,
+                    amount,
+                    percentage: totalAmount > 0 ? (amount / totalAmount) * 100 : 0
+                  }))
+                  .sort((a, b) => b.amount - a.amount)
+                  .map((item) => (
+                    <Box key={item.category} sx={{ width: '100%' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8, alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#0b0f19' }}>
+                          {item.category}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 800, color: '#1e3a8a' }}>
+                            {formatCurrency(item.amount)}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                            ({item.percentage.toFixed(1)}%)
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ 
+                        width: '100%', 
+                        height: 8, 
+                        bgcolor: 'rgba(11, 15, 25, 0.06)', 
+                        borderRadius: 4, 
+                        overflow: 'hidden' 
+                      }}>
+                        <Box sx={{ 
+                          width: `${item.percentage}%`, 
+                          height: '100%', 
+                          bgcolor: '#1e3a8a', 
+                          borderRadius: 4,
+                          transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }} />
+                      </Box>
+                    </Box>
+                  ));
+              })()}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button onClick={() => setOpenChartsModal(false)} variant="contained" color="primary" sx={{ fontWeight: 'bold' }}>
+            Cerrar
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Snackbar notification */}
