@@ -537,7 +537,7 @@ function Dashboard() {
                         No hay gastos registrados en este período.
                       </Box>
                     ) : (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.8, maxHeight: 220, overflowY: 'auto', pr: 0.5 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.8 }}>
                         {(() => {
                           const categoryStats = expenses.reduce((acc, exp) => {
                             const cat = exp.categoria || 'Otros gastos';
