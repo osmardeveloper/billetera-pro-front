@@ -424,100 +424,173 @@ function Dashboard() {
                   </Typography>
                 </Box>
 
-                {/* Render SVG Chart */}
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240, position: 'relative' }}>
-                  {totalFlow === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No hay transacciones registradas para este periodo para generar el gráfico.
+                {/* Render SVG Chart and Category Distribution side-by-side */}
+                <Grid container spacing={3} sx={{ flexGrow: 1, alignItems: 'stretch' }}>
+                  {/* Left Side: SVG Cashflow Chart */}
+                  <Grid item xs={12} sm={6} md={5} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    {totalFlow === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
+                        No hay transacciones registradas para este periodo.
+                      </Typography>
+                    ) : (
+                      /* Custom Interactive SVG Bar Chart */
+                      <svg width="100%" height="220" viewBox="0 0 240 200" style={{ overflow: 'visible', maxWidth: 240 }}>
+                        {/* Grid Lines */}
+                        <line x1="20" y1="20" x2="220" y2="20" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
+                        <line x1="20" y1="70" x2="220" y2="70" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
+                        <line x1="20" y1="120" x2="220" y2="120" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
+                        <line x1="20" y1="170" x2="220" y2="170" stroke="rgba(11, 15, 25, 0.1)" strokeWidth="1.5" />
+
+                        {/* Bar 1: Incomes */}
+                        <rect
+                          x="45"
+                          y={170 - getBarHeight(totalIncome)}
+                          width="35"
+                          height={getBarHeight(totalIncome)}
+                          fill="#16a34a"
+                          rx="4"
+                          style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
+                          onMouseEnter={(e) => {
+                            setTooltip({
+                              show: true,
+                              text: `Ingresos: ${formatCurrency(totalIncome)}`,
+                              x: 62.5,
+                              y: 170 - getBarHeight(totalIncome) - 10
+                            });
+                          }}
+                          onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
+                        />
+                        <text x="62.5" y="190" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="bold">
+                          Ingresos
+                        </text>
+                        <text x="62.5" y={170 - getBarHeight(totalIncome) - 10} textAnchor="middle" fill="#16a34a" fontSize="10" fontWeight="bold">
+                          {formatCurrency(totalIncome)}
+                        </text>
+
+                        {/* Bar 2: Expenses */}
+                        <rect
+                          x="140"
+                          y={170 - getBarHeight(totalExpense)}
+                          width="35"
+                          height={getBarHeight(totalExpense)}
+                          fill="#dc2626"
+                          rx="4"
+                          style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
+                          onMouseEnter={(e) => {
+                            setTooltip({
+                              show: true,
+                              text: `Egresos: ${formatCurrency(totalExpense)}`,
+                              x: 157.5,
+                              y: 170 - getBarHeight(totalExpense) - 10
+                            });
+                          }}
+                          onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
+                        />
+                        <text x="157.5" y="190" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="bold">
+                          Egresos
+                        </text>
+                        <text x="157.5" y={170 - getBarHeight(totalExpense) - 10} textAnchor="middle" fill="#dc2626" fontSize="10" fontWeight="bold">
+                          {formatCurrency(totalExpense)}
+                        </text>
+
+                        {/* SVG Tooltip */}
+                        {tooltip.show && (
+                          <g>
+                            <rect
+                              x={tooltip.x - 65}
+                              y={tooltip.y - 20}
+                              width="130"
+                              height="24"
+                              rx="4"
+                              fill="#0b0f19"
+                              opacity="0.9"
+                            />
+                            <text
+                              x={tooltip.x}
+                              y={tooltip.y - 5}
+                              textAnchor="middle"
+                              fill="#ffffff"
+                              fontSize="9"
+                              fontWeight="bold"
+                            >
+                              {tooltip.text}
+                            </text>
+                          </g>
+                        )}
+                      </svg>
+                    )}
+                  </Grid>
+
+                  {/* Vertical Divider */}
+                  <Grid item xs={false} sm={1} sx={{ display: { xs: 'none', sm: 'flex' }, justifyContent: 'center' }}>
+                    <Divider orientation="vertical" flexItem />
+                  </Grid>
+
+                  {/* Right Side: Category Breakdown */}
+                  <Grid item xs={12} sm={5} md={6} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2, letterSpacing: '0.5px' }}>
+                      DISTRIBUCIÓN DE GASTOS POR CATEGORÍA
                     </Typography>
-                  ) : (
-                    /* Custom Interactive SVG Bar Chart */
-                    <svg width="100%" height="220" viewBox="0 0 300 200" style={{ overflow: 'visible' }}>
-                      {/* Grid Lines */}
-                      <line x1="30" y1="20" x2="280" y2="20" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
-                      <line x1="30" y1="70" x2="280" y2="70" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
-                      <line x1="30" y1="120" x2="280" y2="120" stroke="rgba(11, 15, 25, 0.05)" strokeDasharray="3 3" />
-                      <line x1="30" y1="170" x2="280" y2="170" stroke="rgba(11, 15, 25, 0.1)" strokeWidth="1.5" />
 
-                      {/* Bar 1: Incomes */}
-                      <rect
-                        x="75"
-                        y={170 - getBarHeight(totalIncome)}
-                        width="45"
-                        height={getBarHeight(totalIncome)}
-                        fill="#16a34a"
-                        rx="4"
-                        style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
-                        onMouseEnter={(e) => {
-                          setTooltip({
-                            show: true,
-                            text: `Ingresos: ${formatCurrency(totalIncome)}`,
-                            x: 95,
-                            y: 170 - getBarHeight(totalIncome) - 10
-                          });
-                        }}
-                        onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
-                      />
-                      <text x="97" y="190" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="bold">
-                        Ingresos
-                      </text>
-                      <text x="97" y={170 - getBarHeight(totalIncome) - 10} textAnchor="middle" fill="#16a34a" fontSize="10" fontWeight="bold">
-                        {formatCurrency(totalIncome)}
-                      </text>
+                    {expenses.length === 0 ? (
+                      <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary', bgcolor: '#faf9f5', borderRadius: 1.5 }}>
+                        No hay gastos registrados en este período.
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.8, maxHeight: 220, overflowY: 'auto', pr: 0.5 }}>
+                        {(() => {
+                          const categoryStats = expenses.reduce((acc, exp) => {
+                            const cat = exp.categoria || 'Otros gastos';
+                            acc[cat] = (acc[cat] || 0) + exp.amount;
+                            return acc;
+                          }, {});
 
-                      {/* Bar 2: Expenses */}
-                      <rect
-                        x="180"
-                        y={170 - getBarHeight(totalExpense)}
-                        width="45"
-                        height={getBarHeight(totalExpense)}
-                        fill="#dc2626"
-                        rx="4"
-                        style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
-                        onMouseEnter={(e) => {
-                          setTooltip({
-                            show: true,
-                            text: `Egresos: ${formatCurrency(totalExpense)}`,
-                            x: 202,
-                            y: 170 - getBarHeight(totalExpense) - 10
-                          });
-                        }}
-                        onMouseLeave={() => setTooltip({ ...tooltip, show: false })}
-                      />
-                      <text x="202" y="190" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="bold">
-                        Egresos
-                      </text>
-                      <text x="202" y={170 - getBarHeight(totalExpense) - 10} textAnchor="middle" fill="#dc2626" fontSize="10" fontWeight="bold">
-                        {formatCurrency(totalExpense)}
-                      </text>
+                          const totalAmount = Object.values(categoryStats).reduce((sum, val) => sum + val, 0);
 
-                      {/* SVG Tooltip */}
-                      {tooltip.show && (
-                        <g>
-                          <rect
-                            x={tooltip.x - 65}
-                            y={tooltip.y - 20}
-                            width="130"
-                            height="24"
-                            rx="4"
-                            fill="#0b0f19"
-                            opacity="0.9"
-                          />
-                          <text
-                            x={tooltip.x}
-                            y={tooltip.y - 5}
-                            textAnchor="middle"
-                            fill="#ffffff"
-                            fontSize="9"
-                            fontWeight="bold"
-                          >
-                            {tooltip.text}
-                          </text>
-                        </g>
-                      )}
-                    </svg>
-                  )}
-                </Box>
+                          return Object.entries(categoryStats)
+                            .map(([category, amount]) => ({
+                              category,
+                              amount,
+                              percentage: totalAmount > 0 ? (amount / totalAmount) * 100 : 0
+                            }))
+                            .sort((a, b) => b.amount - a.amount)
+                            .map((item) => (
+                              <Box key={item.category} sx={{ width: '100%' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, alignItems: 'center' }}>
+                                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#0b0f19' }}>
+                                    {item.category}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'baseline' }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#1e3a8a' }}>
+                                      {formatCurrency(item.amount)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+                                      ({item.percentage.toFixed(0)}%)
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                                <Box sx={{ 
+                                  width: '100%', 
+                                  height: 6, 
+                                  bgcolor: 'rgba(11, 15, 25, 0.05)', 
+                                  borderRadius: 3, 
+                                  overflow: 'hidden' 
+                                }}>
+                                  <Box sx={{ 
+                                    width: `${item.percentage}%`, 
+                                    height: '100%', 
+                                    bgcolor: '#1e3a8a', 
+                                    borderRadius: 3,
+                                    transition: 'width 0.8s ease-in-out'
+                                  }} />
+                                </Box>
+                              </Box>
+                            ));
+                        })()}
+                      </Box>
+                    )}
+                  </Grid>
+                </Grid>
               </Paper>
             </Grid>
 
